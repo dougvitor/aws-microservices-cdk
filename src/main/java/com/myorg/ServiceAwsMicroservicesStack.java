@@ -9,6 +9,7 @@ import software.amazon.awscdk.services.ecs.ContainerImage;
 import software.amazon.awscdk.services.ecs.LogDriver;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedFargateService;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedTaskImageOptions;
+import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
 import software.amazon.awscdk.services.logs.LogGroup;
 import software.constructs.Construct;
 
@@ -20,7 +21,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
     public ServiceAwsMicroservicesStack(final Construct scope, final String id, final StackProps props, final Cluster cluster) {
         super(scope, id, props);
 
-        final ApplicationLoadBalancedFargateService serviceAwsMicroservicesFargate = ApplicationLoadBalancedFargateService
+        final ApplicationLoadBalancedFargateService aLBServiceAwsMicroservicesFargate = ApplicationLoadBalancedFargateService
                 .Builder
                 .create(this, "ALB_AWS_MICROSERVICES")
                 .cluster(cluster)
@@ -55,5 +56,16 @@ public class ServiceAwsMicroservicesStack extends Stack {
                 )
                 .publicLoadBalancer(true)
                 .build();
+
+        aLBServiceAwsMicroservicesFargate
+                .getTargetGroup()
+                .configureHealthCheck(
+                        new HealthCheck
+                                .Builder()
+                                .path("/actuator/health")
+                                .port("8080")
+                                .healthyHttpCodes("200")
+                        .build()
+                );
     }
 }

@@ -1,12 +1,11 @@
 package com.myorg;
 
+import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
-import software.amazon.awscdk.services.ecs.AwsLogDriverProps;
-import software.amazon.awscdk.services.ecs.Cluster;
-import software.amazon.awscdk.services.ecs.ContainerImage;
-import software.amazon.awscdk.services.ecs.LogDriver;
+import software.amazon.awscdk.services.applicationautoscaling.EnableScalingProps;
+import software.amazon.awscdk.services.ecs.*;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedFargateService;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedTaskImageOptions;
 import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
@@ -21,7 +20,19 @@ public class ServiceAwsMicroservicesStack extends Stack {
     public ServiceAwsMicroservicesStack(final Construct scope, final String id, final StackProps props, final Cluster cluster) {
         super(scope, id, props);
 
-        final ApplicationLoadBalancedFargateService aLBServiceAwsMicroservicesFargate = ApplicationLoadBalancedFargateService
+        final ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate = createServiceAwsMicroservicesApplicationLoadBalancerFargate(cluster);
+
+        createTargetGroupAwsMicroservices(albServiceAwsMicroservicesFargate);
+
+        final ScalableTaskCount scalableTaskCount = createInstanceCapacityScaling(albServiceAwsMicroservicesFargate);
+
+        createCpuUtilizationScaling(scalableTaskCount);
+
+
+    }
+
+    private ApplicationLoadBalancedFargateService createServiceAwsMicroservicesApplicationLoadBalancerFargate(Cluster cluster) {
+        return ApplicationLoadBalancedFargateService
                 .Builder
                 .create(this, "ALB_AWS_MICROSERVICES")
                 .cluster(cluster)
@@ -56,8 +67,10 @@ public class ServiceAwsMicroservicesStack extends Stack {
                 )
                 .publicLoadBalancer(true)
                 .build();
+    }
 
-        aLBServiceAwsMicroservicesFargate
+    private void createTargetGroupAwsMicroservices(ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate) {
+        albServiceAwsMicroservicesFargate
                 .getTargetGroup()
                 .configureHealthCheck(
                         new HealthCheck
@@ -65,7 +78,32 @@ public class ServiceAwsMicroservicesStack extends Stack {
                                 .path("/actuator/health")
                                 .port("8080")
                                 .healthyHttpCodes("200")
-                        .build()
+                                .build()
+                );
+    }
+
+    private ScalableTaskCount createInstanceCapacityScaling(ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate) {
+        return albServiceAwsMicroservicesFargate
+                .getService()
+                .autoScaleTaskCount(
+                        EnableScalingProps
+                                .builder()
+                                .minCapacity(2)
+                                .maxCapacity(4)
+                                .build()
+                );
+    }
+
+    private void createCpuUtilizationScaling(ScalableTaskCount scalableTaskCount) {
+        scalableTaskCount
+                .scaleOnCpuUtilization(
+                        "ServiceAwsMicroservicesAutoScaling",
+                        CpuUtilizationScalingProps
+                                .builder()
+                                .targetUtilizationPercent(50)
+                                .scaleInCooldown(Duration.seconds(60))
+                                .scaleOutCooldown(Duration.seconds(60))
+                                .build()
                 );
     }
 }

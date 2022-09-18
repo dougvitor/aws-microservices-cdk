@@ -27,6 +27,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                 .cpu(512)
                 .desiredCount(2)
                 .listenerPort(8080)
+                .assignPublicIp(true)
                 .memoryLimitMiB(1024)
                 .taskImageOptions(
                         ApplicationLoadBalancedTaskImageOptions

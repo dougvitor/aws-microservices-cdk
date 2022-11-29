@@ -35,6 +35,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
         return ApplicationLoadBalancedFargateService
                 .Builder
                 .create(this, "ALB_AWS_MICROSERVICES")
+                .serviceName("serviceAwsMicroservices")
                 .cluster(cluster)
                 .cpu(512)
                 .desiredCount(2)
@@ -55,11 +56,11 @@ public class ServiceAwsMicroservicesStack extends Stack {
                                                                 LogGroup
                                                                         .Builder
                                                                         .create(this, "ServiceAwsMicroservicesGroup")
-                                                                        .logGroupName("ServiceAwsMicroservices")
+                                                                        .logGroupName("ServiceAwsMicroservicesLogGroup")
                                                                         .removalPolicy(RemovalPolicy.DESTROY)
                                                                         .build()
                                                         )
-                                                        .streamPrefix("ServiceAwsMicroservices")
+                                                        .streamPrefix("ServiceAwsMicroservicesLog")
                                                         .build()
                                         )
                                 )

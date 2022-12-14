@@ -22,11 +22,11 @@ public class ServiceAwsMicroservicesStack extends Stack {
 
         final ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate = createServiceAwsMicroservicesApplicationLoadBalancerFargate(cluster);
 
-        createTargetGroupAwsMicroservices(albServiceAwsMicroservicesFargate);
+        configureHealthCheckTargetGroupAwsMicroservices(albServiceAwsMicroservicesFargate);
 
         final ScalableTaskCount scalableTaskCount = createInstanceCapacityScaling(albServiceAwsMicroservicesFargate);
 
-        createCpuUtilizationScaling(scalableTaskCount);
+        configureCpuUtilizationScaling(scalableTaskCount);
 
 
     }
@@ -46,7 +46,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.1.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.2.0"))
                                 .containerPort(8080)
                                 .logDriver(
                                         LogDriver.awsLogs(
@@ -70,7 +70,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                 .build();
     }
 
-    private void createTargetGroupAwsMicroservices(ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate) {
+    private void configureHealthCheckTargetGroupAwsMicroservices(ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate) {
         albServiceAwsMicroservicesFargate
                 .getTargetGroup()
                 .configureHealthCheck(
@@ -95,7 +95,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                 );
     }
 
-    private void createCpuUtilizationScaling(ScalableTaskCount scalableTaskCount) {
+    private void configureCpuUtilizationScaling(ScalableTaskCount scalableTaskCount) {
         scalableTaskCount
                 .scaleOnCpuUtilization(
                         "ServiceAwsMicroservicesAutoScaling",

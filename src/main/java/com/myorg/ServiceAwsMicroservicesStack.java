@@ -1,9 +1,6 @@
 package com.myorg;
 
-import software.amazon.awscdk.Duration;
-import software.amazon.awscdk.RemovalPolicy;
-import software.amazon.awscdk.Stack;
-import software.amazon.awscdk.StackProps;
+import software.amazon.awscdk.*;
 import software.amazon.awscdk.services.applicationautoscaling.EnableScalingProps;
 import software.amazon.awscdk.services.ecs.*;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedFargateService;
@@ -11,6 +8,9 @@ import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedTaskI
 import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
 import software.amazon.awscdk.services.logs.LogGroup;
 import software.constructs.Construct;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServiceAwsMicroservicesStack extends Stack {
     public ServiceAwsMicroservicesStack(final Construct scope, final String id, final Cluster cluster) {
@@ -20,7 +20,13 @@ public class ServiceAwsMicroservicesStack extends Stack {
     public ServiceAwsMicroservicesStack(final Construct scope, final String id, final StackProps props, final Cluster cluster) {
         super(scope, id, props);
 
-        final ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate = createServiceAwsMicroservicesApplicationLoadBalancerFargate(cluster);
+        Map<String, String> envVariables = new HashMap<>();
+        envVariables.put("SPRING_DATASOURCE_URL",
+                "jdbc:mariadb://" + Fn.importValue("rds-endpoint") + ":3306/aws-microservices?createDatabaseIfNoExists=true");
+        envVariables.put("SPRING_DATASOURCE_USERNAME", "admin");
+        envVariables.put("SPRING_DATASOURCE_PASSWORD", Fn.importValue("rds-password"));
+
+        final ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate = createServiceAwsMicroservicesApplicationLoadBalancerFargate(cluster, envVariables);
 
         configureHealthCheckTargetGroupAwsMicroservices(albServiceAwsMicroservicesFargate);
 
@@ -31,7 +37,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
 
     }
 
-    private ApplicationLoadBalancedFargateService createServiceAwsMicroservicesApplicationLoadBalancerFargate(Cluster cluster) {
+    private ApplicationLoadBalancedFargateService createServiceAwsMicroservicesApplicationLoadBalancerFargate(final Cluster cluster, final Map<String, String> envVariables) {
         return ApplicationLoadBalancedFargateService
                 .Builder
                 .create(this, "ALB_AWS_MICROSERVICES")
@@ -64,6 +70,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                                                         .build()
                                         )
                                 )
+                                .environment(envVariables)
                                 .build()
                 )
                 .publicLoadBalancer(true)

@@ -22,7 +22,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
 
         Map<String, String> envVariables = new HashMap<>();
         envVariables.put("SPRING_DATASOURCE_URL",
-                "jdbc:mariadb://" + Fn.importValue("rds-endpoint") + ":3306/aws-microservices?createDatabaseIfNoExists=true");
+                "jdbc:mariadb://" + Fn.importValue("rds-endpoint") + ":3306/aws-microservices?createDatabaseIfNotExist=true");
         envVariables.put("SPRING_DATASOURCE_USERNAME", "admin");
         envVariables.put("SPRING_DATASOURCE_PASSWORD", Fn.importValue("rds-password"));
 
@@ -52,7 +52,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.2.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.3.0"))
                                 .containerPort(8080)
                                 .logDriver(
                                         LogDriver.awsLogs(

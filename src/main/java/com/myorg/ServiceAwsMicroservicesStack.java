@@ -52,7 +52,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.3.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.5.0"))
                                 .containerPort(8080)
                                 .logDriver(
                                         LogDriver.awsLogs(

@@ -6,6 +6,7 @@ import software.amazon.awscdk.services.ecs.*;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedFargateService;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedTaskImageOptions;
 import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
+import software.amazon.awscdk.services.events.targets.SnsTopic;
 import software.amazon.awscdk.services.logs.LogGroup;
 import software.constructs.Construct;
 
@@ -13,11 +14,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceAwsMicroservicesStack extends Stack {
-    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final Cluster cluster) {
-        this(scope, id, null, cluster);
+    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final Cluster cluster, final SnsTopic productEventsTopic) {
+        this(scope, id, null, cluster, productEventsTopic);
     }
 
-    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final StackProps props, final Cluster cluster) {
+    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final StackProps props, final Cluster cluster, final SnsTopic productEventsTopic) {
         super(scope, id, props);
 
         Map<String, String> envVariables = new HashMap<>();
@@ -25,6 +26,8 @@ public class ServiceAwsMicroservicesStack extends Stack {
                 "jdbc:mariadb://" + Fn.importValue("rds-endpoint") + ":3306/aws-microservices?createDatabaseIfNotExist=true");
         envVariables.put("SPRING_DATASOURCE_USERNAME", "admin");
         envVariables.put("SPRING_DATASOURCE_PASSWORD", Fn.importValue("rds-password"));
+        envVariables.put("AWS_REGION", "us-east-1");
+        envVariables.put("AWS_SNS_TOPIC_PRODUCT_EVENTS_ARN", productEventsTopic.getTopic().getTopicArn());
 
         final ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate = createServiceAwsMicroservicesApplicationLoadBalancerFargate(cluster, envVariables);
 
@@ -34,6 +37,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
 
         configureCpuUtilizationScaling(scalableTaskCount);
 
+        productEventsTopic.getTopic().grantPublish(albServiceAwsMicroservicesFargate.getTaskDefinition().getTaskRole());
 
     }
 
@@ -52,7 +56,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.5.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.6.0"))
                                 .containerPort(8080)
                                 .logDriver(
                                         LogDriver.awsLogs(

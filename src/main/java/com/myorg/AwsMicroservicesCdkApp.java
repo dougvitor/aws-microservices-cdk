@@ -16,9 +16,13 @@ public class AwsMicroservicesCdkApp {
 
         SnsStack snsStack = new SnsStack(app, "Sns");
 
-        final ServiceAwsMicroservicesStack serviceAwsMicroservicesStack = new ServiceAwsMicroservicesStack(app, "ServiceAwsMicroservices", clusterStack.getCluster());
+        final ServiceAwsMicroservicesStack serviceAwsMicroservicesStack = new ServiceAwsMicroservicesStack(app,
+                "ServiceAwsMicroservices",
+                clusterStack.getCluster(),
+                snsStack.getProductEventsTopic());
         serviceAwsMicroservicesStack.addDependency(clusterStack);
         serviceAwsMicroservicesStack.addDependency(rdsStack);
+        serviceAwsMicroservicesStack.addDependency(snsStack);
 
         app.synth();
     }

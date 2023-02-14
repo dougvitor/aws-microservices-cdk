@@ -24,6 +24,12 @@ public class AwsMicroservicesCdkApp {
         serviceAwsMicroservicesStack.addDependency(rdsStack);
         serviceAwsMicroservicesStack.addDependency(snsStack);
 
+        final ServiceAwsMicroservicesConsumerStack serviceAwsMicroservicesConsumerStack = new ServiceAwsMicroservicesConsumerStack(app,
+                "ServiceAwsMicroservicesConsumer",
+                clusterStack.getCluster()
+        );
+        serviceAwsMicroservicesConsumerStack.addDependency(clusterStack);
+
         app.synth();
     }
 }

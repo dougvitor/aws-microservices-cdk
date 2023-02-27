@@ -1,6 +1,5 @@
 package com.myorg;
 
-import org.jetbrains.annotations.NotNull;
 import software.amazon.awscdk.Duration;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
@@ -41,6 +40,9 @@ public class ServiceAwsMicroservicesConsumerStack extends Stack {
         final ScalableTaskCount scalableTaskCount = createInstanceCapacityScaling(albServiceAwsMicroservicesConsumerFargate);
 
         configureCpuUtilizationScaling(scalableTaskCount);
+
+        //Atribuir permissão da aplicação para acessar a fila criada
+        productEventsQueue.grantConsumeMessages(albServiceAwsMicroservicesConsumerFargate.getTaskDefinition().getTaskRole());
     }
 
 
@@ -59,7 +61,7 @@ public class ServiceAwsMicroservicesConsumerStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices_consumer")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice-consumer:1.0.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice-consumer:1.1.0"))
                                 .containerPort(9090)
                                 .logDriver(
                                         LogDriver.awsLogs(

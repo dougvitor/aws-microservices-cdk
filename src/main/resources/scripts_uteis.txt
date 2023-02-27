@@ -1,2 +1,2 @@
 - Deploy passando parametros
-cdk deploy --parameters Rds:databasePassword=evs1cinmdi Rds ServiceAwsMicroservices
+cdk deploy --parameters Rds:databasePassword=evs1cinmdi Rds ServiceAwsMicroservices ServiceAwsMicroservicesConsumer

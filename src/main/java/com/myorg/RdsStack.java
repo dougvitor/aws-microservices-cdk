@@ -37,6 +37,7 @@ public class RdsStack extends Stack {
                 .instanceType(InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.MICRO))
                 .multiAz(false)
                 .allocatedStorage(10)
+                .backupRetention(Duration.minutes(0))
                 .securityGroups(Collections.singletonList(iSecurityGroup))
                 .vpcSubnets(SubnetSelection.builder()
                         .subnets(vpc.getPublicSubnets())

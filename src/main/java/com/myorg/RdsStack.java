@@ -42,6 +42,7 @@ public class RdsStack extends Stack {
                 .vpcSubnets(SubnetSelection.builder()
                         .subnets(vpc.getPublicSubnets())
                         .build())
+                .removalPolicy(RemovalPolicy.DESTROY)
                 .build();
 
         CfnOutput.Builder.create(this, "rds-endpoint")

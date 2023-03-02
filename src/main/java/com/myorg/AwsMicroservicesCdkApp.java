@@ -24,13 +24,16 @@ public class AwsMicroservicesCdkApp {
         serviceAwsMicroservicesStack.addDependency(rdsStack);
         serviceAwsMicroservicesStack.addDependency(snsStack);
 
+        final DynamodbStack dDbStack = new DynamodbStack(app, "Ddb");
+
         final ServiceAwsMicroservicesConsumerStack serviceAwsMicroservicesConsumerStack = new ServiceAwsMicroservicesConsumerStack(app,
                 "ServiceAwsMicroservicesConsumer",
                 clusterStack.getCluster(),
                 snsStack.getProductEventsTopic()
         );
         serviceAwsMicroservicesConsumerStack.addDependency(clusterStack);
-        serviceAwsMicroservicesStack.addDependency(snsStack);
+        serviceAwsMicroservicesConsumerStack.addDependency(snsStack);
+        serviceAwsMicroservicesConsumerStack.addDependency(dDbStack);
 
         app.synth();
     }

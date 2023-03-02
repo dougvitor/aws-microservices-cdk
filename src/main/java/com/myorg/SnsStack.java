@@ -18,14 +18,18 @@ public class SnsStack extends Stack {
     public SnsStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
 
-        productEventsTopic = SnsTopic.Builder.create(Topic.Builder.create(this, "ProductEventsTopic")
-                .topicName("product-events")
-                .build())
-                .build();
+        productEventsTopic = SnsTopic.Builder.create(
+                Topic.Builder.create(this, "ProductEventsTopic")
+                        .topicName("product-events")
+                        .build()
+        ).build();
 
-        productEventsTopic.getTopic().addSubscription(EmailSubscription.Builder.create("doug.vitor@gmail.com")
-                .json(true)
-                .build());
+        productEventsTopic.getTopic()
+                .addSubscription(
+                        EmailSubscription.Builder.create("doug.vitor@gmail.com")
+                                .json(true)
+                                .build()
+                );
     }
 
     public SnsTopic getProductEventsTopic() {

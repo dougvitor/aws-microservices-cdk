@@ -29,7 +29,8 @@ public class AwsMicroservicesCdkApp {
         final ServiceAwsMicroservicesConsumerStack serviceAwsMicroservicesConsumerStack = new ServiceAwsMicroservicesConsumerStack(app,
                 "ServiceAwsMicroservicesConsumer",
                 clusterStack.getCluster(),
-                snsStack.getProductEventsTopic()
+                snsStack.getProductEventsTopic(),
+                dDbStack.getProductEventsDdb()
         );
         serviceAwsMicroservicesConsumerStack.addDependency(clusterStack);
         serviceAwsMicroservicesConsumerStack.addDependency(snsStack);

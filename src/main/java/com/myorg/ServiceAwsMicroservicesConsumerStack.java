@@ -5,6 +5,7 @@ import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
 import software.amazon.awscdk.services.applicationautoscaling.EnableScalingProps;
+import software.amazon.awscdk.services.dynamodb.Table;
 import software.amazon.awscdk.services.ecs.*;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedFargateService;
 import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedTaskImageOptions;
@@ -15,16 +16,15 @@ import software.amazon.awscdk.services.sns.subscriptions.SqsSubscription;
 import software.amazon.awscdk.services.sqs.DeadLetterQueue;
 import software.amazon.awscdk.services.sqs.Queue;
 import software.constructs.Construct;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceAwsMicroservicesConsumerStack extends Stack {
-    public ServiceAwsMicroservicesConsumerStack(final Construct scope, final String id, final Cluster cluster, final SnsTopic productEventsTopic) {
-        this(scope, id, null, cluster, productEventsTopic);
+    public ServiceAwsMicroservicesConsumerStack(final Construct scope, final String id, final Cluster cluster, final SnsTopic productEventsTopic, Table productEventsDdb) {
+        this(scope, id, null, cluster, productEventsTopic, productEventsDdb);
     }
 
-    public ServiceAwsMicroservicesConsumerStack(final Construct scope, final String id, final StackProps props, final Cluster cluster, final SnsTopic productEventsTopic) {
+    public ServiceAwsMicroservicesConsumerStack(final Construct scope, final String id, final StackProps props, final Cluster cluster, final SnsTopic productEventsTopic, Table productEventsDdb) {
         super(scope, id, props);
 
         Queue productEventsQueue = getQueue(productEventsTopic);
@@ -43,6 +43,9 @@ public class ServiceAwsMicroservicesConsumerStack extends Stack {
 
         //Atribuir permissão da aplicação para acessar a fila criada
         productEventsQueue.grantConsumeMessages(albServiceAwsMicroservicesConsumerFargate.getTaskDefinition().getTaskRole());
+
+        //Atribuir permissão de leitura e escrita na tabela
+        productEventsDdb.grantReadWriteData(albServiceAwsMicroservicesConsumerFargate.getTaskDefinition().getTaskRole());
     }
 
 
@@ -61,7 +64,7 @@ public class ServiceAwsMicroservicesConsumerStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices_consumer")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice-consumer:1.2.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice-consumer:1.3.1"))
                                 .containerPort(9090)
                                 .logDriver(
                                         LogDriver.awsLogs(

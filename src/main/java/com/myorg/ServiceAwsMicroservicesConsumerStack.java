@@ -64,7 +64,7 @@ public class ServiceAwsMicroservicesConsumerStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices_consumer")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice-consumer:1.4.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice-consumer:1.5.0"))
                                 .containerPort(9090)
                                 .logDriver(
                                         LogDriver.awsLogs(

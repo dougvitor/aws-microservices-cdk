@@ -20,7 +20,7 @@ public class DynamodbStack extends Stack {
 
         productEventsDdb = Table.Builder.create(this, "ProductEventsDdb")
                 .tableName("product-events")
-                .billingMode(BillingMode.PROVISIONED)
+                .billingMode(BillingMode.PROVISIONED) // BillingMode.PAY_PER_REQUEST não necessita adicionarmos um readCapacity e writeCapacity, tão pouco gerar um autoscaling, pois tudo isso já é gerenciado pela infra AWS.
                 .readCapacity(1)
                 .writeCapacity(1)
                 .partitionKey(

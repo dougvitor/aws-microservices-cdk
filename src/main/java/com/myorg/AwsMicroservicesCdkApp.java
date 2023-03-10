@@ -16,13 +16,18 @@ public class AwsMicroservicesCdkApp {
 
         SnsStack snsStack = new SnsStack(app, "Sns");
 
+        InvoiceAppStack invoiceAppStack = new InvoiceAppStack(app, "invoiceApp");
+
         final ServiceAwsMicroservicesStack serviceAwsMicroservicesStack = new ServiceAwsMicroservicesStack(app,
                 "ServiceAwsMicroservices",
                 clusterStack.getCluster(),
-                snsStack.getProductEventsTopic());
+                snsStack.getProductEventsTopic(),
+                invoiceAppStack.getBucket(),
+                invoiceAppStack.getS3invoiceQueue());
         serviceAwsMicroservicesStack.addDependency(clusterStack);
         serviceAwsMicroservicesStack.addDependency(rdsStack);
         serviceAwsMicroservicesStack.addDependency(snsStack);
+        serviceAwsMicroservicesStack.addDependency(invoiceAppStack);
 
         final DynamodbStack dDbStack = new DynamodbStack(app, "Ddb");
 

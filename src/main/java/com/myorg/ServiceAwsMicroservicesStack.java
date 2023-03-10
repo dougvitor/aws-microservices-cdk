@@ -8,17 +8,19 @@ import software.amazon.awscdk.services.ecs.patterns.ApplicationLoadBalancedTaskI
 import software.amazon.awscdk.services.elasticloadbalancingv2.HealthCheck;
 import software.amazon.awscdk.services.events.targets.SnsTopic;
 import software.amazon.awscdk.services.logs.LogGroup;
+import software.amazon.awscdk.services.s3.Bucket;
+import software.amazon.awscdk.services.sqs.Queue;
 import software.constructs.Construct;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceAwsMicroservicesStack extends Stack {
-    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final Cluster cluster, final SnsTopic productEventsTopic) {
-        this(scope, id, null, cluster, productEventsTopic);
+    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final Cluster cluster, final SnsTopic productEventsTopic, final Bucket invoiceBucket, final Queue invoiceQueue) {
+        this(scope, id, null, cluster, productEventsTopic, invoiceBucket, invoiceQueue);
     }
 
-    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final StackProps props, final Cluster cluster, final SnsTopic productEventsTopic) {
+    public ServiceAwsMicroservicesStack(final Construct scope, final String id, final StackProps props, final Cluster cluster, final SnsTopic productEventsTopic, final Bucket invoiceBucket, final Queue invoiceQueue) {
         super(scope, id, props);
 
         Map<String, String> envVariables = new HashMap<>();
@@ -28,6 +30,8 @@ public class ServiceAwsMicroservicesStack extends Stack {
         envVariables.put("SPRING_DATASOURCE_PASSWORD", Fn.importValue("rds-password"));
         envVariables.put("AWS_REGION", "us-east-1");
         envVariables.put("AWS_SNS_TOPIC_PRODUCT_EVENTS_ARN", productEventsTopic.getTopic().getTopicArn());
+        envVariables.put("AWS_S3_BUCKET_INVOICE_NAME", invoiceBucket.getBucketName());
+        envVariables.put("AWS_SQS_QUEUE_INVOICE_EVENTS_NAME", invoiceQueue.getQueueName());
 
         final ApplicationLoadBalancedFargateService albServiceAwsMicroservicesFargate = createServiceAwsMicroservicesApplicationLoadBalancerFargate(cluster, envVariables);
 
@@ -38,6 +42,10 @@ public class ServiceAwsMicroservicesStack extends Stack {
         configureCpuUtilizationScaling(scalableTaskCount);
 
         productEventsTopic.getTopic().grantPublish(albServiceAwsMicroservicesFargate.getTaskDefinition().getTaskRole());
+
+        invoiceQueue.grantConsumeMessages(albServiceAwsMicroservicesFargate.getTaskDefinition().getTaskRole());
+
+        invoiceBucket.grantReadWrite(albServiceAwsMicroservicesFargate.getTaskDefinition().getTaskRole());
 
     }
 
@@ -56,7 +64,7 @@ public class ServiceAwsMicroservicesStack extends Stack {
                         ApplicationLoadBalancedTaskImageOptions
                                 .builder()
                                 .containerName("aws_microservices")
-                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.6.0"))
+                                .image(ContainerImage.fromRegistry("dougiesvitor/aws-microservice:1.7.0"))
                                 .containerPort(8080)
                                 .logDriver(
                                         LogDriver.awsLogs(
